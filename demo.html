@@ -399,6 +399,16 @@
                     </div>
                 </div>
             </div>
+            
+            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-top: 24px; border: 1px solid #e2e8f0;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #1e293b;">Understanding the Data Through Sound</h3>
+                <p style="font-size: 16px; line-height: 1.6; color: #475569; margin-bottom: 12px;">
+                    This map makes it easy to see at a glance how many stores accept SNAP benefits in each area. But the music helps you understand something deeper about the variety of options available.
+                </p>
+                <p style="font-size: 16px; line-height: 1.6; color: #475569;">
+                    Just like in music, where different instruments work together to create something greater than the individual parts, the variety of store types in each zip code tells a story about the community's access to different kinds of food. Some areas might have mostly convenience stores, while others have a rich mix of grocery stores, farmers markets, and specialty shops. The audio helps you hear this diversity in a way that numbers alone can't convey.
+                </p>
+            </div>
         </div>
     </div>
 
@@ -413,13 +423,14 @@
         let transformedAudioData = null;
         let sampleRate = 44100;
 
-        // SNAP Map variables
-        let snapMap = null;
-        let snapZipData = {};
-        let snapAudioContext = null;
-        let snapAudioBuffers = {};
-        let snapCurrentlyPlaying = new Set();
-        let selectedSnapZipCode = null;
+                 // SNAP Map variables
+         let snapMap = null;
+         let snapZipData = {};
+         let snapAudioContext = null;
+         let snapAudioBuffers = {};
+         let snapCurrentlyPlaying = new Set();
+         let snapAudioSources = {}; // Track actual audio sources by ID
+         let selectedSnapZipCode = null;
 
         // Generate waveform data
         function generateWaveformData() {
@@ -1796,39 +1807,47 @@
             }
         }
 
-        // Play SNAP instrument
-        function playSNAPInstrument(instrument, id) {
-            if (!snapAudioBuffers[instrument] || snapAudioBuffers[instrument].length === 0) {
-                console.warn(`No SNAP audio buffers for instrument: ${instrument}`);
-                return [];
-            }
-            
-            const sources = [];
-            
-            snapAudioBuffers[instrument].forEach((buffer, index) => {
-                const source = snapAudioContext.createBufferSource();
-                const gainNode = snapAudioContext.createGain();
-                
-                source.buffer = buffer;
-                source.connect(gainNode);
-                gainNode.connect(snapAudioContext.destination);
-                
-                // Set volume based on number of tracks
-                const volume = 1.0 / snapAudioBuffers[instrument].length;
-                gainNode.gain.setValueAtTime(volume, snapAudioContext.currentTime);
-                
-                source.start();
-                snapCurrentlyPlaying.add(`${id}-${index}`);
-                sources.push(source);
-                
-                source.onended = () => {
-                    snapCurrentlyPlaying.delete(`${id}-${index}`);
-                    updateSNAPPlayButtonStates();
-                };
-            });
-            
-            return sources;
-        }
+                 // Play SNAP instrument
+         function playSNAPInstrument(instrument, id) {
+             if (!snapAudioBuffers[instrument] || snapAudioBuffers[instrument].length === 0) {
+                 console.warn(`No SNAP audio buffers for instrument: ${instrument}`);
+                 return [];
+             }
+             
+             const sources = [];
+             
+             snapAudioBuffers[instrument].forEach((buffer, index) => {
+                 const source = snapAudioContext.createBufferSource();
+                 const gainNode = snapAudioContext.createGain();
+                 
+                 source.buffer = buffer;
+                 source.connect(gainNode);
+                 gainNode.connect(snapAudioContext.destination);
+                 
+                 // Set volume based on number of tracks
+                 const volume = 1.0 / snapAudioBuffers[instrument].length;
+                 gainNode.gain.setValueAtTime(volume, snapAudioContext.currentTime);
+                 
+                 source.start();
+                 const sourceId = `${id}-${index}`;
+                 snapCurrentlyPlaying.add(sourceId);
+                 
+                 // Store the actual source for later stopping
+                 if (!snapAudioSources[id]) {
+                     snapAudioSources[id] = [];
+                 }
+                 snapAudioSources[id].push(source);
+                 
+                 sources.push(source);
+                 
+                 source.onended = () => {
+                     snapCurrentlyPlaying.delete(sourceId);
+                     updateSNAPPlayButtonStates();
+                 };
+             });
+             
+             return sources;
+         }
 
         // Stop all SNAP audio
         function stopAllSNAPAudio() {
@@ -1858,8 +1877,9 @@
                     });
                 }
                 
-                // Clear the tracking sets
-                snapCurrentlyPlaying.clear();
+                                 // Clear the tracking sets
+                 snapCurrentlyPlaying.clear();
+                 snapAudioSources = {};
                 
                 // Reset all tracks playing state
                 allTracksPlaying = false;
@@ -1893,33 +1913,50 @@
             }
         }
 
-        // Stop all SNAP tracks specifically (for the toggle function)
-        function stopAllSNAPTracks() {
-            console.log('Stopping all SNAP tracks...');
-            
-            try {
-                // Stop all currently playing audio sources
-                snapCurrentlyPlaying.forEach(id => {
-                    console.log(`Stopping audio source: ${id}`);
-                });
-                
-                // Clear the tracking set
-                snapCurrentlyPlaying.clear();
-                
-                // Reset all tracks playing state
-                allTracksPlaying = false;
-                
-                // Update button state
-                updatePlayAllButtonState();
-                
-                console.log('All SNAP tracks stopped');
-                
-            } catch (error) {
-                console.error('Error stopping SNAP tracks:', error);
-                // Fallback to full stop if track-specific stop fails
-                stopAllSNAPAudio();
-            }
-        }
+                 // Stop all SNAP tracks specifically (for the toggle function)
+         function stopAllSNAPTracks() {
+             console.log('Stopping all SNAP tracks...');
+             
+             try {
+                 // Stop all "all tracks" audio sources
+                 Object.keys(snapAudioSources).forEach(sourceId => {
+                     if (sourceId.startsWith('all-')) {
+                         console.log(`Stopping audio sources for: ${sourceId}`);
+                         if (snapAudioSources[sourceId]) {
+                             snapAudioSources[sourceId].forEach(source => {
+                                 try {
+                                     if (source && typeof source.stop === 'function') {
+                                         source.stop();
+                                     }
+                                 } catch (e) {
+                                     console.warn('Error stopping individual source:', e);
+                                 }
+                             });
+                         }
+                         delete snapAudioSources[sourceId];
+                     }
+                 });
+                 
+                 // Remove all "all-" sources from the tracking set
+                 const sourcesToRemove = Array.from(snapCurrentlyPlaying).filter(id => id.startsWith('all-'));
+                 sourcesToRemove.forEach(id => {
+                     snapCurrentlyPlaying.delete(id);
+                 });
+                 
+                 // Reset all tracks playing state
+                 allTracksPlaying = false;
+                 
+                 // Update button state
+                 updatePlayAllButtonState();
+                 
+                 console.log('All SNAP tracks stopped');
+                 
+             } catch (error) {
+                 console.error('Error stopping SNAP tracks:', error);
+                 // Fallback to full stop if track-specific stop fails
+                 stopAllSNAPAudio();
+             }
+         }
 
         // Update SNAP play button states
         function updateSNAPPlayButtonStates() {
