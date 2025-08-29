@@ -1348,7 +1348,7 @@
         // Load King County ZIP boundaries from GeoJSON
         async function loadKingCountyZipBoundaries() {
             try {
-                const response = await fetch('MapData/Zipcodes_for_King_County_and_Surrounding_Area_(Shorelines)___zipcode_shore_area.geojson');
+                const response = await fetch('MapData/King_County_Zipcodes.geojson');
                 const geojson = await response.json();
                 
                 const zipBoundaries = {};
