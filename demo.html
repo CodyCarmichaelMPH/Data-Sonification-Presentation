@@ -368,51 +368,57 @@
                         </div>
                     </div>
                     
-                    <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
-                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Audio Controls</h3>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <button id="play-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px;">Play All Tracks Together</button>
-                            <button id="stop-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px; background-color: #dc2626;">Stop All Audio</button>
-                        </div>
-                        <div id="zip-info-snap" style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-top: 12px; border: 1px solid #e2e8f0; display: none;">
-                            <div style="font-weight: 600; margin-bottom: 6px; color: #1e293b; font-size: 14px;">Selected Zip Code</div>
-                            <div id="store-counts-snap" style="font-size: 12px; color: #475569;"></div>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <button id="play-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; flex: 1;">Play Zip Code Audio</button>
-                                <button id="stop-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; background-color: #dc2626; display: none;">Stop</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                                         <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; width: 100%; flex: 1;">
-                         <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Understanding the Data Through Sound</h3>
-                         <p style="font-size: 13px; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
-                             This map makes it easy to see at a glance how many stores accept SNAP benefits in each area. But the music helps you understand something deeper about the variety of options available.
-                         </p>
-                         <p style="font-size: 13px; color: #64748b; line-height: 1.4;">
-                             Just like in music, where different instruments work together to create something greater than the individual parts, the variety of store types in each zip code tells a story about the community's access to different kinds of food. Some areas might have mostly convenience stores, while others have a rich mix of grocery stores, farmers markets, and specialty shops. The audio helps you hear this diversity in a way that numbers alone can't convey.
-                         </p>
-                     </div>
-                     
-                     <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; width: 100%; flex: 1;">
-                         <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Map Information</h3>
-                         <p style="font-size: 13px; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
-                             This map shows SNAP retailer locations across King County. Each zip code is colored based on the total number of facilities. 
-                             Click on a zip code to see detailed store counts and play audio representing the store types in that area.
-                         </p>
-                         <p style="font-size: 13px; color: #64748b; line-height: 1.4;">
-                             The audio combines different instrument tracks based on the types of stores present in each zip code, creating a unique "sound" for each area.
-                         </p>
-                         <p style="font-size: 11px; color: #94a3b8; font-style: italic; margin-top: 8px;">
-                             Data source: USDA SNAP Retailer website (August 20, 2025)
-                         </p>
+                                         <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+                         <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Audio Controls</h3>
+                         <div style="display: flex; flex-direction: column; gap: 8px;">
+                             <button id="play-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px;">Play All Tracks Together</button>
+                             <button id="stop-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px; background-color: #dc2626;">Stop All Audio</button>
+                         </div>
+                         <div id="zip-info-snap" style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-top: 12px; border: 1px solid #e2e8f0; display: none;">
+                             <div style="font-weight: 600; margin-bottom: 6px; color: #1e293b; font-size: 14px;">Selected Zip Code</div>
+                             <div id="store-counts-snap" style="font-size: 12px; color: #475569;"></div>
+                             <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                 <button id="play-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; flex: 1;">Play Zip Code Audio</button>
+                                 <button id="stop-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; background-color: #dc2626; display: none;">Stop</button>
+                             </div>
+                         </div>
                      </div>
                 </div>
             </div>
-            
-            
-        </div>
-    </div>
+                         
+             
+         </div>
+
+         <!-- Understanding the Data Through Sound Section -->
+         <div class="section">
+             <h2 class="section-title">Understanding the Data Through Sound</h2>
+             <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                 <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                     This map makes it easy to see at a glance how many stores accept SNAP benefits in each area. But the music helps you understand something deeper about the variety of options available.
+                 </p>
+                 <p style="font-size: 16px; line-height: 1.6;">
+                     Just like in music, where different instruments work together to create something greater than the individual parts, the variety of store types in each zip code tells a story about the community's access to different kinds of food. Some areas might have mostly convenience stores, while others have a rich mix of grocery stores, farmers markets, and specialty shops. The audio helps you hear this diversity in a way that numbers alone can't convey.
+                 </p>
+             </div>
+         </div>
+
+         <!-- Map Information Section -->
+         <div class="section">
+             <h2 class="section-title">Map Information</h2>
+             <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                 <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                     This map shows SNAP retailer locations across King County. Each zip code is colored based on the total number of facilities. 
+                     Click on a zip code to see detailed store counts and play audio representing the store types in that area.
+                 </p>
+                 <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                     The audio combines different instrument tracks based on the types of stores present in each zip code, creating a unique "sound" for each area.
+                 </p>
+                 <p style="font-size: 14px; color: #94a3b8; font-style: italic;">
+                     Data source: USDA SNAP Retailer website (August 20, 2025)
+                 </p>
+             </div>
+         </div>
+     </div>
 
     <script>
         // Global variables
