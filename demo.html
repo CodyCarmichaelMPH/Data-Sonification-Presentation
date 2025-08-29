@@ -1594,7 +1594,7 @@
 
         // Setup SNAP event listeners
         function setupSNAPEventListeners() {
-            document.getElementById('play-all-snap-btn').addEventListener('click', playAllSNAPTracks);
+            document.getElementById('play-all-snap-btn').addEventListener('click', toggleAllSNAPTracks);
             document.getElementById('play-zip-snap-btn').addEventListener('click', () => {
                 if (selectedSnapZipCode) {
                     toggleSNAPZipCodeAudio(selectedSnapZipCode);
@@ -1608,6 +1608,38 @@
 
 
 
+        // Toggle all SNAP tracks (play/stop)
+        async function toggleAllSNAPTracks() {
+            try {
+                if (allTracksPlaying) {
+                    // Stop if already playing
+                    stopAllSNAPTracks();
+                } else {
+                    // Start playing all tracks
+                    await playAllSNAPTracks();
+                }
+                // Update button state
+                updatePlayAllButtonState();
+            } catch (error) {
+                console.error('Error toggling all SNAP tracks:', error);
+                alert('Unable to play audio. Please check that audio files are available.');
+            }
+        }
+
+        // Update the play all button state
+        function updatePlayAllButtonState() {
+            const playAllBtn = document.getElementById('play-all-snap-btn');
+            if (playAllBtn) {
+                if (allTracksPlaying) {
+                    playAllBtn.textContent = 'Stop All Tracks';
+                    playAllBtn.style.backgroundColor = '#dc2626';
+                } else {
+                    playAllBtn.textContent = 'Play All Tracks Together';
+                    playAllBtn.style.backgroundColor = '#3b82f6';
+                }
+            }
+        }
+
         // Play all SNAP tracks together
         async function playAllSNAPTracks() {
             try {
@@ -1616,12 +1648,15 @@
                 }
                 
                 // Stop any currently playing audio first
-                stopAllSNAPAudio();
+                stopAllSNAPTracks();
                 
                 // Check if audio files are loaded
                 if (!snapAudioBuffers || Object.keys(snapAudioBuffers).length === 0) {
                     await loadSNAPAudioFiles();
                 }
+                
+                // Set the flag to indicate all tracks are playing
+                allTracksPlaying = true;
                 
                 // Play all instruments
                 Object.keys(snapAudioBuffers).forEach(instrument => {
@@ -1874,6 +1909,9 @@
                 // Reset all tracks playing state
                 allTracksPlaying = false;
                 
+                // Update button state
+                updatePlayAllButtonState();
+                
                 console.log('All SNAP tracks stopped');
                 
             } catch (error) {
@@ -1932,12 +1970,7 @@
             }
             
             // Update all UI elements
-            const playAllBtn = document.getElementById('play-all-snap-btn');
-            if (playAllBtn) {
-                playAllBtn.textContent = 'Play All Tracks Together';
-                playAllBtn.style.backgroundColor = '#3b82f6';
-                playAllBtn.classList.remove('recording');
-            }
+            updatePlayAllButtonState();
             
             // Update all popup buttons
             const allPlayButtons = document.querySelectorAll('[onclick*="toggleSNAPZipCodeAudio"]');
