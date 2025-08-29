@@ -41,7 +41,7 @@ git add .gitattributes
 # Commit and push
 git add .
 git commit -m "Add DataNotes demo with LFS for large files"
-git push -u origin master
+git push -u origin main
 ```
 
 ## Option 3: Split the GeoJSON File
@@ -55,7 +55,7 @@ Once files are uploaded:
 1. **Enable GitHub Pages**:
    - Go to Settings → Pages
    - Select "Deploy from a branch"
-   - Choose "master" branch and "/(root)" folder
+   - Choose "main" branch and "/(root)" folder
    - Click Save
 
 2. **Your site will be live at**:
