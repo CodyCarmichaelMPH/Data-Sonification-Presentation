@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King County SNAP Retailer Audio Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .data-source {
+            font-size: 14px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            height: 600px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .zip-info {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .zip-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .store-counts {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .audio-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .audio-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .audio-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .audio-btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .audio-btn.playing {
+            background-color: #dc2626;
+        }
+
+        .audio-btn.playing:hover {
+            background-color: #b91c1c;
+        }
+
+        .instrument-mapping {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .instrument-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #0369a1;
+        }
+
+        .instrument-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 14px;
+            color: #0c4a6e;
+        }
+
+        .instrument-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .instrument-name {
+            font-weight: 500;
+        }
+
+        .instrument-files {
+            font-size: 12px;
+            color: #0369a1;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .popup-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .popup-stats {
+            margin-bottom: 12px;
+        }
+
+        .popup-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .popup-audio-btn {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #3b82f6;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .popup-audio-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .popup-audio-btn.playing {
+            background-color: #dc2626;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">King County SNAP Retailer Audio Map</h1>
+            <p class="subtitle">Explore food access through interactive mapping and audio sonification</p>
+            <p class="data-source">Data source: USDA SNAP Retailer website (August 20, 2025)</p>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="info-panel">
+                    <h3 class="panel-title">Store Type Legend</h3>
+                    <div class="legend" id="legend"></div>
+                    
+                    <div class="instrument-mapping">
+                        <h4 class="instrument-title">Audio Instrument Mapping</h4>
+                        <div class="instrument-list">
+                            <div class="instrument-item">
+                                <span class="instrument-name">Grocery Store</span>
+                                <span class="instrument-files">Bass</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Convenience Store</span>
+                                <span class="instrument-files">Guitar</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Supermarket</span>
+                                <span class="instrument-files">Lead</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Super Store</span>
+                                <span class="instrument-files">Pad</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Farmers and Markets</span>
+                                <span class="instrument-files">Piano + Synth</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Specialty Store</span>
+                                <span class="instrument-files">Kick + Snare</span>
+                            </div>
+                            <div class="instrument-item">
+                                <span class="instrument-name">Other</span>
+                                <span class="instrument-files">Hihat + Open Hat</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3 class="panel-title">Audio Controls</h3>
+                    <div class="audio-controls">
+                        <button id="play-all-btn" class="audio-btn">Play All Tracks Together</button>
+                        <button id="stop-all-btn" class="audio-btn" disabled>Stop All Audio</button>
+                    </div>
+                    <div id="zip-info" class="zip-info" style="display: none;">
+                        <div class="zip-title">Selected Zip Code</div>
+                        <div class="store-counts" id="store-counts"></div>
+                        <button id="play-zip-btn" class="audio-btn" style="margin-top: 12px;">Play Zip Code Audio</button>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3 class="panel-title">Map Information</h3>
+                    <p style="font-size: 14px; color: #64748b; line-height: 1.5;">
+                        This map shows SNAP retailer locations across King County. Each zip code is colored based on the total number of facilities. 
+                        Click on a zip code to see detailed store counts and play audio representing the store types in that area.
+                    </p>
+                    <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-top: 12px;">
+                        The audio combines different instrument tracks based on the types of stores present in each zip code, creating a unique "sound" for each area.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let zipData = {};
+        let audioContext;
+        let audioBuffers = {};
+        let currentlyPlaying = new Set();
+        let selectedZipCode = null;
+
+        // Store type to instrument mapping
+        const storeTypeMapping = {
+            'Grocery Store': 'bass',
+            'Convenience Store': 'guitar',
+            'Supermarket': 'lead',
+            'Super Store': 'pad',
+            'Farmers and Markets': 'piano_synth',
+            'Specialty Store': 'kick_snare',
+            'Other': 'hihat_openhat'
+        };
+
+        // Instrument file mapping
+        const instrumentFiles = {
+            'bass': ['Music/Cymatics - Cedar - 95 BPM C# Min Bass.wav'],
+            'guitar': ['Music/Cymatics - Cedar - 95 BPM C# Min Guitar.wav'],
+            'lead': ['Music/Cymatics - Cedar - 95 BPM C# Min Lead.wav'],
+            'pad': ['Music/Cymatics - Overtime - 95 BPM C# Min Pad.wav'],
+            'piano_synth': [
+                'Music/Cymatics - Overtime - 95 BPM C# Min Piano.wav',
+                'Music/Cymatics - Overtime - 95 BPM C# Min Synth.wav'
+            ],
+            'kick_snare': [
+                'Music/Cymatics - Ablaze Drum Loop - 95 BPM Kick.wav',
+                'Music/Cymatics - Ablaze Drum Loop - 95 BPM Snare.wav'
+            ],
+            'hihat_openhat': [
+                'Music/Cymatics - Ablaze Drum Loop - 95 BPM Hihat.wav',
+                'Music/Cymatics - Ablaze Drum Loop - 95 BPM Open Hat.wav'
+            ]
+        };
+
+        // Color scheme for store types
+        const storeColors = {
+            'Grocery Store': '#3b82f6',
+            'Convenience Store': '#8b5cf6',
+            'Supermarket': '#06b6d4',
+            'Super Store': '#10b981',
+            'Farmers and Markets': '#f59e0b',
+            'Specialty Store': '#ef4444',
+            'Other': '#6b7280'
+        };
+
+        // Initialize the application
+        async function init() {
+            try {
+                // Initialize audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Load SNAP data
+                const snapData = await loadSNAPData();
+                
+                // Process data by zip code
+                processDataByZipCode(snapData);
+                
+                // Initialize map
+                initMap();
+                
+                // Load audio files
+                await loadAudioFiles();
+                
+                // Create legend
+                createLegend();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize the application. Please refresh the page.');
+            }
+        }
+
+        // Load SNAP data
+        async function loadSNAPData() {
+            try {
+                const response = await fetch('MapData/SNAP Retailer Location data KING county.csv');
+                const csvText = await response.text();
+                return parseCSV(csvText);
+            } catch (error) {
+                console.error('Error loading SNAP data:', error);
+                throw new Error('Failed to load SNAP data');
+            }
+        }
+
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] || '';
+                    });
+                    data.push(row);
+                }
+            }
+            
+            return data;
+        }
+
+        // Process data by zip code
+        function processDataByZipCode(data) {
+            zipData = {};
+            
+            data.forEach(row => {
+                const zipCode = row['Zip Code'];
+                const storeType = row['Store Type'];
+                
+                if (zipCode && storeType) {
+                    if (!zipData[zipCode]) {
+                        zipData[zipCode] = {
+                            totalStores: 0,
+                            storeTypes: {},
+                            coordinates: {
+                                lat: parseFloat(row['Latitude']) || 0,
+                                lng: parseFloat(row['Longitude']) || 0
+                            }
+                        };
+                    }
+                    
+                    zipData[zipCode].totalStores++;
+                    zipData[zipCode].storeTypes[storeType] = (zipData[zipCode].storeTypes[storeType] || 0) + 1;
+                }
+            });
+            
+            console.log('Processed zip data:', zipData);
+        }
+
+        // Initialize map
+        function initMap() {
+            // King County center coordinates
+            const kingCountyCenter = [47.5480, -121.9836];
+            
+            map = L.map('map').setView(kingCountyCenter, 9);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add zip code markers
+            addZipCodeMarkers();
+        }
+
+        // Add zip code markers to map
+        function addZipCodeMarkers() {
+            Object.keys(zipData).forEach(zipCode => {
+                const data = zipData[zipCode];
+                const coordinates = data.coordinates;
+                
+                if (coordinates.lat && coordinates.lng) {
+                    // Create circle marker with size based on total stores
+                    const radius = Math.max(8, Math.min(20, data.totalStores * 2));
+                    const color = getZipCodeColor(data.totalStores);
+                    
+                    const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
+                        radius: radius,
+                        fillColor: color,
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.7
+                    }).addTo(map);
+                    
+                    // Create popup content
+                    const popupContent = createPopupContent(zipCode, data);
+                    marker.bindPopup(popupContent);
+                    
+                    // Add click handler
+                    marker.on('click', () => {
+                        selectZipCode(zipCode, data);
+                    });
+                }
+            });
+        }
+
+        // Get color for zip code based on store count
+        function getZipCodeColor(storeCount) {
+            if (storeCount >= 20) return '#dc2626'; // Red
+            if (storeCount >= 15) return '#ea580c'; // Orange
+            if (storeCount >= 10) return '#d97706'; // Amber
+            if (storeCount >= 5) return '#65a30d'; // Lime
+            return '#16a34a'; // Green
+        }
+
+        // Create popup content
+        function createPopupContent(zipCode, data) {
+            const storeTypeList = Object.entries(data.storeTypes)
+                .map(([type, count]) => `<div class="popup-stat"><span>${type}:</span><span>${count}</span></div>`)
+                .join('');
+            
+            return `
+                <div style="min-width: 200px;">
+                    <div class="popup-title">Zip Code ${zipCode}</div>
+                    <div class="popup-stats">
+                        <div class="popup-stat"><span>Total Stores:</span><span>${data.totalStores}</span></div>
+                        ${storeTypeList}
+                    </div>
+                    <button class="popup-audio-btn" onclick="playZipCodeAudio('${zipCode}')">
+                        Play Audio
+                    </button>
+                </div>
+            `;
+        }
+
+        // Select zip code
+        function selectZipCode(zipCode, data) {
+            selectedZipCode = zipCode;
+            
+            // Update zip info panel
+            const zipInfo = document.getElementById('zip-info');
+            const storeCounts = document.getElementById('store-counts');
+            
+            const storeTypeList = Object.entries(data.storeTypes)
+                .map(([type, count]) => `<div>${type}: ${count}</div>`)
+                .join('');
+            
+            storeCounts.innerHTML = `
+                <div><strong>Zip Code:</strong> ${zipCode}</div>
+                <div><strong>Total Stores:</strong> ${data.totalStores}</div>
+                <div style="margin-top: 8px;"><strong>Store Types:</strong></div>
+                ${storeTypeList}
+            `;
+            
+            zipInfo.style.display = 'block';
+        }
+
+        // Load audio files
+        async function loadAudioFiles() {
+            const loadingPromises = [];
+            
+            Object.entries(instrumentFiles).forEach(([instrument, files]) => {
+                files.forEach(file => {
+                    const promise = loadAudioFile(file, instrument);
+                    loadingPromises.push(promise);
+                });
+            });
+            
+            try {
+                await Promise.all(loadingPromises);
+                console.log('All audio files loaded successfully');
+            } catch (error) {
+                console.error('Error loading audio files:', error);
+                showError('Some audio files failed to load. Audio features may be limited.');
+            }
+        }
+
+        // Load individual audio file
+        async function loadAudioFile(filePath, instrument) {
+            try {
+                const response = await fetch(filePath);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                if (!audioBuffers[instrument]) {
+                    audioBuffers[instrument] = [];
+                }
+                audioBuffers[instrument].push(audioBuffer);
+                
+                console.log(`Loaded audio file: ${filePath}`);
+            } catch (error) {
+                console.error(`Error loading audio file ${filePath}:`, error);
+                throw error;
+            }
+        }
+
+        // Create legend
+        function createLegend() {
+            const legend = document.getElementById('legend');
+            
+            Object.entries(storeColors).forEach(([storeType, color]) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${color};"></div>
+                    <span>${storeType}</span>
+                `;
+                legend.appendChild(legendItem);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('play-all-btn').addEventListener('click', playAllTracks);
+            document.getElementById('stop-all-btn').addEventListener('click', stopAllAudio);
+            document.getElementById('play-zip-btn').addEventListener('click', () => {
+                if (selectedZipCode) {
+                    playZipCodeAudio(selectedZipCode);
+                }
+            });
+        }
+
+        // Play all tracks together
+        async function playAllTracks() {
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            stopAllAudio();
+            
+            const playAllBtn = document.getElementById('play-all-btn');
+            const stopAllBtn = document.getElementById('stop-all-btn');
+            
+            playAllBtn.disabled = true;
+            playAllBtn.classList.add('playing');
+            stopAllBtn.disabled = false;
+            
+            // Play all instruments
+            Object.keys(audioBuffers).forEach(instrument => {
+                playInstrument(instrument, `all-${instrument}`);
+            });
+        }
+
+        // Play zip code audio
+        async function playZipCodeAudio(zipCode) {
+            if (!zipData[zipCode]) return;
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            stopAllAudio();
+            
+            const data = zipData[zipCode];
+            const storeTypes = Object.keys(data.storeTypes);
+            
+            // Play instruments for each store type present
+            storeTypes.forEach(storeType => {
+                const instrument = storeTypeMapping[storeType];
+                if (instrument && audioBuffers[instrument]) {
+                    playInstrument(instrument, `${zipCode}-${instrument}`);
+                }
+            });
+            
+            // Update popup button if it exists
+            const popupButtons = document.querySelectorAll('.popup-audio-btn');
+            popupButtons.forEach(btn => {
+                if (btn.textContent === 'Play Audio') {
+                    btn.textContent = 'Playing...';
+                    btn.classList.add('playing');
+                }
+            });
+        }
+
+        // Play instrument
+        function playInstrument(instrument, id) {
+            if (!audioBuffers[instrument] || audioBuffers[instrument].length === 0) {
+                console.warn(`No audio buffers for instrument: ${instrument}`);
+                return;
+            }
+            
+            audioBuffers[instrument].forEach((buffer, index) => {
+                const source = audioContext.createBufferSource();
+                const gainNode = audioContext.createGain();
+                
+                source.buffer = buffer;
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Set volume based on number of tracks
+                const volume = 1.0 / audioBuffers[instrument].length;
+                gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+                
+                source.start();
+                currentlyPlaying.add(`${id}-${index}`);
+                
+                source.onended = () => {
+                    currentlyPlaying.delete(`${id}-${index}`);
+                    updatePlayButtonStates();
+                };
+            });
+        }
+
+        // Stop all audio
+        function stopAllAudio() {
+            currentlyPlaying.clear();
+            
+            const playAllBtn = document.getElementById('play-all-btn');
+            const stopAllBtn = document.getElementById('stop-all-btn');
+            
+            playAllBtn.disabled = false;
+            playAllBtn.classList.remove('playing');
+            stopAllBtn.disabled = true;
+            
+            // Update popup buttons
+            const popupButtons = document.querySelectorAll('.popup-audio-btn');
+            popupButtons.forEach(btn => {
+                btn.textContent = 'Play Audio';
+                btn.classList.remove('playing');
+            });
+        }
+
+        // Update play button states
+        function updatePlayButtonStates() {
+            if (currentlyPlaying.size === 0) {
+                const playAllBtn = document.getElementById('play-all-btn');
+                const stopAllBtn = document.getElementById('stop-all-btn');
+                
+                playAllBtn.disabled = false;
+                playAllBtn.classList.remove('playing');
+                stopAllBtn.disabled = true;
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            container.insertBefore(errorDiv, container.firstChild);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

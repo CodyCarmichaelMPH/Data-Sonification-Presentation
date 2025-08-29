@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataNotes - Data Sonification Demo</title>
+    <meta name="description" content="Interactive data sonification demo featuring King County SNAP retailer mapping with audio visualization">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        p {
+            color: #64748b;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 32px 0;
+        }
+        .feature {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .feature h3 {
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        .feature p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DataNotes</h1>
+        <p>Interactive data sonification demo featuring King County SNAP retailer mapping with audio visualization. Explore how data can be experienced through sound.</p>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🗺️ Interactive Map</h3>
+                <p>Choropleth visualization of King County zip codes with SNAP retailer data</p>
+            </div>
+            <div class="feature">
+                <h3>🎵 Audio Sonification</h3>
+                <p>Hear the data through musical instruments representing different store types</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Real-time Analysis</h3>
+                <p>Voice recording and waveform analysis with data transformation</p>
+            </div>
+        </div>
+        
+        <a href="demo.html" class="btn">Launch Data Sonification Demo</a>
+    </div>
+</body>
+</html>

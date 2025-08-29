@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Notes - Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .recorder-container {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .recording-status {
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+            font-weight: 600;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+
+        .recording-status.recording {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border-color: #dc2626;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { border-color: #dc2626; }
+            50% { border-color: #fca5a5; }
+            100% { border-color: #dc2626; }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 12px;
+            min-width: 200px;
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .btn.recording {
+            background-color: #dc2626;
+        }
+
+        .btn.recording:hover {
+            background-color: #b91c1c;
+        }
+
+        .grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .audio-player {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .audio-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .audio-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .download-btn {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .success-message {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Data Notes</h1>
+            <p class="subtitle">Transform your voice with data waveforms</p>
+        </div>
+
+        <!-- Data Sonification Explanation -->
+        <div class="section">
+            <h2 class="section-title">What is Data Sonification?</h2>
+            <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                    <strong>Data sonification</strong> is the process of converting data into sound. Just as we use charts and graphs to visualize data patterns, 
+                    sonification allows us to "hear" data through audio representations. This technique helps us:
+                </p>
+                <ul style="margin-bottom: 16px; padding-left: 24px; font-size: 16px; line-height: 1.6;">
+                    <li><strong>Discover patterns</strong> that might be invisible in visual representations</li>
+                    <li><strong>Process information</strong> through our auditory system, which can detect subtle changes and rhythms</li>
+                    <li><strong>Access data</strong> in new ways, especially useful for people with visual impairments</li>
+                    <li><strong>Enhance understanding</strong> by combining visual and auditory information</li>
+                </ul>
+                <p style="font-size: 16px; line-height: 1.6;">
+                    In this application, we're exploring how data patterns can transform human speech, creating a bridge between 
+                    data analysis and creative expression.
+                </p>
+            </div>
+        </div>
+
+        <!-- Example Section Header -->
+        <div class="section">
+            <h2 class="section-title">Example: Waveform Transformation</h2>
+            <p style="text-align: center; margin-bottom: 24px; color: #64748b; font-size: 16px;">
+                Below is a sample waveform. Try recording your voice while describing what you observe, then listen to how the data transforms your speech.
+            </p>
+            <h3 class="section-title" style="font-size: 20px; margin-bottom: 16px;">📊 Observe this waveform and describe what you see</h3>
+            <div id="waveform-chart"></div>
+        </div>
+
+        <!-- Recording Section -->
+        <div class="section">
+            <h2 class="section-title">🎙️ Record Your Voice</h2>
+            <div class="recorder-container">
+                <div id="recording-status" class="recording-status">Ready to record</div>
+                <button id="record-btn" class="btn">
+                    <span>🎙️</span>
+                    Start Recording
+                </button>
+                <div style="margin-top: 16px; font-size: 14px; color: #64748b;">
+                    Click to start recording your voice
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="success-message hidden">
+            ✅ Recording completed! Your audio has been transformed.
+        </div>
+
+        <!-- Audio Playback Section -->
+        <div id="audio-section" class="section hidden">
+            <h2 class="section-title">🔊 Audio Playback</h2>
+            <div class="grid">
+                <div class="audio-player">
+                    <div class="audio-header">
+                        <h3 class="audio-title">🎵 Original Recording</h3>
+                        <button class="download-btn" onclick="downloadAudio('original')">📥 Download</button>
+                    </div>
+                    <div id="original-info" style="font-size: 14px; color: #64748b; margin-bottom: 16px;"></div>
+                    <audio id="original-audio" controls></audio>
+                </div>
+                
+                <div class="audio-player">
+                    <div class="audio-header">
+                        <h3 class="audio-title">🎛️ Transformed Audio</h3>
+                        <button class="download-btn" onclick="downloadAudio('transformed')">📥 Download</button>
+                    </div>
+                    <div id="transformed-info" style="font-size: 14px; color: #64748b; margin-bottom: 16px;"></div>
+                    <audio id="transformed-audio" controls></audio>
+                </div>
+            </div>
+        </div>
+
+                 <!-- Audio Waveform Visualization Section -->
+         <div id="waveform-section" class="section hidden">
+             <h2 class="section-title">📈 Audio Pitch Analysis</h2>
+             <div>
+                 <div class="audio-player">
+                     <h3 class="audio-title">Original Audio Pitch Analysis (0.1s segments)</h3>
+                     <div id="original-waveform-chart"></div>
+                 </div>
+                 
+                 <div class="audio-player" style="margin-top: 24px;">
+                     <h3 class="audio-title">Autotuned Audio Pitch Target (0.1s segments)</h3>
+                     <div id="transformed-waveform-chart"></div>
+                 </div>
+             </div>
+         </div>
+
+                <!-- Data Interpretation Section -->
+        <div class="section">
+            <h2 class="section-title">Did your voice sound weird or hard to understand?</h2>
+            <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                    So your voice sounded weird, right? That's actually a perfect example of what happens when we try to translate data between different formats. 
+                    We call this the <strong>translation gap</strong>.
+                </p>
+                
+                <h3 style="font-size: 18px; font-weight: 600; margin: 24px 0 16px 0; color: #1e293b;">What's happening here:</h3>
+                <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                    When we take data and turn it into charts, graphs, sounds, or visualizations, we're basically translating between different languages. 
+                    And like any translation, things can get lost or misunderstood. Here's what's going on:
+                </p>
+                <ul style="margin-bottom: 16px; padding-left: 24px; font-size: 16px; line-height: 1.6;">
+                    <li><strong>Lots of steps</strong> from raw data to what you actually see or hear to what you understand</li>
+                    <li><strong>Context matters</strong> what makes perfect sense to you might confuse someone else</li>
+                    <li><strong>Different backgrounds</strong> people bring their own experiences and expectations</li>
+                    <li><strong>Stuff gets lost</strong> the original meaning can get twisted along the way</li>
+                </ul>
+                
+                <h3 style="font-size: 18px; font-weight: 600; margin: 24px 0 16px 0; color: #1e293b;">Why this matters:</h3>
+                <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                    Your transformed voice probably sounded strange to someone who didn't know the original waveform. 
+                    Data visualizations and sonifications work the same way they can be totally confusing if the audience doesn't have the right context. 
+                    This isn't just about technology, it's about <strong>actually communicating effectively</strong>.
+                </p>
+                
+                <h3 style="font-size: 18px; font-weight: 600; margin: 24px 0 16px 0; color: #1e293b;">How to bridge the gap:</h3>
+                <p style="margin-bottom: 16px; font-size: 16px; line-height: 1.6;">
+                    The trick is to understand your audience and create interpretations that actually work for them:
+                </p>
+                <ul style="margin-bottom: 16px; padding-left: 24px; font-size: 16px; line-height: 1.6;">
+                    <li><strong>Give context</strong> explain what the data means and why anyone should care</li>
+                    <li><strong>Pick the right format</strong> use something your audience is comfortable with</li>
+                    <li><strong>Test it out</strong> get feedback from the people you're trying to reach</li>
+                    <li><strong>Keep improving</strong> be willing to change your approach based on what works</li>
+                </ul>
+                
+                <h3 style="font-size: 18px; font-weight: 600; margin: 24px 0 16px 0; color: #1e293b;">The bottom line:</h3>
+                <p style="font-size: 16px; line-height: 1.6;">
+                    Whether you're making charts, sonifications, or any other data representation, you're not just showing information. 
+                    You're <strong>telling a story</strong>. The goal is to help your audience actually understand and care about what you're showing them. 
+                    That takes empathy, clear communication, and being willing to meet people where they are.
+                </p>
+            </div>
+        </div>
+
+        <!-- Data Sonification Example Section -->
+        <div class="section">
+            <h2 class="section-title">Data Sonification in Action: King County SNAP Retailer Map</h2>
+            <p style="text-align: center; margin-bottom: 24px; color: #64748b; font-size: 16px;">
+                Explore how data can be transformed into sound through this interactive map of SNAP retailer locations in King County.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 24px; margin-bottom: 24px;">
+                <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; height: 500px;">
+                    <div id="snap-map" style="width: 100%; height: 100%; border-radius: 8px;"></div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Store Count Legend</h3>
+                        <div id="snap-legend" style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;"></div>
+                        
+                        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                            <h4 style="font-weight: 600; margin-bottom: 8px; color: #0369a1; font-size: 14px;">Audio Instrument Mapping</h4>
+                            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #0c4a6e;">
+                                <div style="display: flex; justify-content: space-between;"><span>Grocery Store:</span><span>Bass</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Convenience Store:</span><span>Guitar</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Supermarket:</span><span>Lead</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Super Store:</span><span>Pad</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Farmers and Markets:</span><span>Piano + Synth</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Specialty Store:</span><span>Kick + Snare</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Other:</span><span>Hihat + Open Hat</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Audio Controls</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button id="play-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px;">Play All Tracks Together</button>
+                            <button id="stop-all-snap-btn" class="btn" style="font-size: 14px; padding: 10px 16px; background-color: #dc2626;">Stop All Audio</button>
+                        </div>
+                        <div id="zip-info-snap" style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-top: 12px; border: 1px solid #e2e8f0; display: none;">
+                            <div style="font-weight: 600; margin-bottom: 6px; color: #1e293b; font-size: 14px;">Selected Zip Code</div>
+                            <div id="store-counts-snap" style="font-size: 12px; color: #475569;"></div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <button id="play-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; flex: 1;">Play Zip Code Audio</button>
+                                <button id="stop-zip-snap-btn" class="btn" style="font-size: 12px; padding: 8px 12px; background-color: #dc2626; display: none;">Stop</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #1e293b;">Map Information</h3>
+                        <p style="font-size: 13px; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
+                            This map shows SNAP retailer locations across King County. Each zip code is colored based on the total number of facilities. 
+                            Click on a zip code to see detailed store counts and play audio representing the store types in that area.
+                        </p>
+                        <p style="font-size: 13px; color: #64748b; line-height: 1.4;">
+                            The audio combines different instrument tracks based on the types of stores present in each zip code, creating a unique "sound" for each area.
+                        </p>
+                        <p style="font-size: 11px; color: #94a3b8; font-style: italic; margin-top: 8px;">
+                            Data source: USDA SNAP Retailer website (August 20, 2025)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingDuration = 0;
+        let durationInterval = null;
+        let originalAudioData = null;
+        let transformedAudioData = null;
+        let sampleRate = 44100;
+
+        // SNAP Map variables
+        let snapMap = null;
+        let snapZipData = {};
+        let snapAudioContext = null;
+        let snapAudioBuffers = {};
+        let snapCurrentlyPlaying = new Set();
+        let selectedSnapZipCode = null;
+
+        // Generate waveform data
+        function generateWaveformData() {
+            const x = [];
+            const y = [];
+            
+            for (let i = 0; i < 200; i++) {
+                x.push(i * 0.05);
+                const t = i * 0.05;
+                // Create a pitch-based waveform (frequency changes over time)
+                const value = 
+                    Math.sin(t * 2) * 0.3 + 
+                    Math.sin(t * 4) * 0.2 + 
+                    Math.sin(t * 1.5) * 0.15 + 
+                    Math.cos(t * 3) * 0.1 +
+                    (Math.random() - 0.5) * 0.05;
+                y.push(value);
+            }
+            
+            return { x, y };
+        }
+
+        // Create waveform chart
+        function createWaveformChart() {
+            const data = generateWaveformData();
+            
+            const plotData = [{
+                x: data.x,
+                y: data.y,
+                type: 'scatter',
+                mode: 'lines',
+                line: {
+                    color: '#3b82f6',
+                    width: 2
+                },
+                fill: 'tonexty',
+                fillcolor: 'rgba(59, 130, 246, 0.1)',
+                name: 'Waveform'
+            }];
+
+            const layout = {
+                title: {
+                    text: 'Data Waveform',
+                    font: { size: 16, color: '#1e293b' },
+                    x: 0.5,
+                    xanchor: 'center'
+                },
+                height: 400,
+                margin: { l: 50, r: 20, t: 50, b: 50 },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                showlegend: false,
+                xaxis: {
+                    title: 'Time',
+                    showgrid: true,
+                    gridcolor: '#f1f5f9',
+                    zeroline: false,
+                    color: '#64748b'
+                },
+                yaxis: {
+                    title: 'Amplitude',
+                    showgrid: true,
+                    gridcolor: '#f1f5f9',
+                    zeroline: false,
+                    color: '#64748b'
+                },
+                hovermode: 'closest'
+            };
+
+            const config = {
+                displayModeBar: false,
+                responsive: true
+            };
+
+            Plotly.newPlot('waveform-chart', plotData, layout, config);
+            return data;
+        }
+
+                 // Analyze pitch of audio segment using autocorrelation
+         function analyzePitch(audioSegment, sampleRate) {
+             if (audioSegment.length === 0) return 4; // Default to A4 if no audio
+             
+             // Calculate autocorrelation
+             const correlation = [];
+             const maxLag = Math.floor(sampleRate / 50); // Minimum frequency ~50Hz
+             const minLag = Math.floor(sampleRate / 2000); // Maximum frequency ~2000Hz
+             
+             for (let lag = minLag; lag < maxLag; lag++) {
+                 let sum = 0;
+                 for (let i = 0; i < audioSegment.length - lag; i++) {
+                     sum += audioSegment[i] * audioSegment[i + lag];
+                 }
+                 correlation.push(sum);
+             }
+             
+             // Find the peak in autocorrelation (fundamental frequency)
+             let maxCorrelation = 0;
+             let bestLag = minLag;
+             
+             for (let i = 0; i < correlation.length; i++) {
+                 if (correlation[i] > maxCorrelation) {
+                     maxCorrelation = correlation[i];
+                     bestLag = minLag + i;
+                 }
+             }
+             
+             // Convert lag to frequency
+             const frequency = sampleRate / bestLag;
+             
+             // Convert frequency to octave (relative to A4 = 440Hz)
+             const octave = Math.log2(frequency / 440) + 4;
+             
+             // Clamp to reasonable range
+             return Math.max(0, Math.min(8, octave));
+         }
+
+                   // Simple and fast pitch shifting using sample rate conversion
+          function simplePitchShift(audioData, pitchRatio) {
+              const outputLength = Math.floor(audioData.length / pitchRatio);
+              const output = new Float32Array(outputLength);
+              
+              for (let i = 0; i < outputLength; i++) {
+                  const sourceIndex = i * pitchRatio;
+                  const sourceIndexInt = Math.floor(sourceIndex);
+                  const sourceIndexFrac = sourceIndex - sourceIndexInt;
+                  
+                  // Linear interpolation
+                  const sample1 = audioData[sourceIndexInt] || 0;
+                  const sample2 = audioData[sourceIndexInt + 1] || 0;
+                  output[i] = sample1 * (1 - sourceIndexFrac) + sample2 * sourceIndexFrac;
+              }
+              
+              return output;
+          }
+
+                   // Apply waveform transformation with autotune effect
+          function applyWaveformTransformation(audioData, waveformData) {
+              if (!audioData || audioData.length === 0) {
+                  return null;
+              }
+              
+              try {
+                  const audioLength = audioData.length;
+                  const sampleRate = 44100;
+                  const segmentDuration = 0.1; // 0.1 second segments
+                  const samplesPerSegment = Math.floor(sampleRate * segmentDuration);
+                  
+                  // Find min/max Y values from waveform for octave mapping
+                  const maxY = Math.max(...waveformData.y);
+                  const minY = Math.min(...waveformData.y);
+                  const yRange = maxY - minY;
+                  
+                  // Calculate total duration and number of segments
+                  const totalDuration = audioLength / sampleRate;
+                  const numSegments = Math.ceil(totalDuration / segmentDuration);
+                  
+                  const transformedAudio = new Float32Array(audioLength);
+                  const originalOctaves = []; // Track original pitch analysis
+                  const octaveChanges = []; // Track octave changes for visualization
+                  
+                  // Create a smoother autotune effect
+                  for (let segment = 0; segment < numSegments; segment++) {
+                      const segmentStartSample = segment * samplesPerSegment;
+                      const segmentEndSample = Math.min((segment + 1) * samplesPerSegment, audioLength);
+                      const segmentAudio = audioData.slice(segmentStartSample, segmentEndSample);
+                      
+                                             // Analyze original pitch of this segment
+                       const originalOctave = analyzePitch(segmentAudio, sampleRate);
+                       originalOctaves.push(originalOctave);
+                       
+                       // Debug first few segments
+                       if (segment < 3) {
+                           console.log(`Demo Segment ${segment}: original octave = ${originalOctave}`);
+                       }
+                      
+                      // Sample the waveform at the middle of this time segment
+                      const sampleTime = segment * segmentDuration + (segmentDuration / 2);
+                      const waveformIndex = (sampleTime / 10) * (waveformData.x.length - 1); // 10 seconds total waveform
+                      const waveformIndexInt = Math.floor(waveformIndex);
+                      const waveformIndexFrac = waveformIndex - waveformIndexInt;
+                      
+                      // Interpolate Y value from waveform
+                      const y1 = waveformData.y[waveformIndexInt] || 0;
+                      const y2 = waveformData.y[Math.min(waveformIndexInt + 1, waveformData.y.length - 1)] || 0;
+                      const yValue = y1 * (1 - waveformIndexFrac) + y2 * waveformIndexFrac;
+                      
+                                             // Map Y value to target octave (0-8 octaves, A0 to A8)
+                       const targetOctave = ((yValue - minY) / yRange) * 8;
+                       octaveChanges.push(targetOctave);
+                       
+                       // Debug first few segments
+                       if (segment < 3) {
+                           console.log(`Demo Segment ${segment}: yValue = ${yValue}, target octave = ${targetOctave}`);
+                       }
+                      
+                      // Calculate gentle pitch correction (limited to ±2 octaves for intelligibility)
+                      const pitchDifference = targetOctave - originalOctave;
+                      const limitedPitchDifference = Math.max(-2, Math.min(2, pitchDifference));
+                      const pitchRatio = Math.pow(2, limitedPitchDifference);
+                      
+                                             // Apply gentle pitch correction using simple pitch shifting
+                       const correctedSegment = simplePitchShift(segmentAudio, pitchRatio);
+                       
+                       // Blend the corrected segment with original for natural sound
+                       const blendFactor = 0.6; // 60% corrected, 40% original for more natural sound
+                       for (let i = 0; i < correctedSegment.length && segmentStartSample + i < audioLength; i++) {
+                           const originalSample = audioData[segmentStartSample + i] || 0;
+                           const correctedSample = correctedSegment[i] || 0;
+                           transformedAudio[segmentStartSample + i] = 
+                               (correctedSample * blendFactor) + (originalSample * (1 - blendFactor));
+                       }
+                  }
+                  
+                  // Apply subtle compression to smooth out any artifacts
+                  const compressedAudio = new Float32Array(audioLength);
+                  const threshold = 0.8;
+                  const ratio = 4;
+                  
+                  for (let i = 0; i < audioLength; i++) {
+                      const sample = transformedAudio[i];
+                      if (Math.abs(sample) > threshold) {
+                          const excess = Math.abs(sample) - threshold;
+                          const compressedExcess = excess / ratio;
+                          const sign = sample >= 0 ? 1 : -1;
+                          compressedAudio[i] = sign * (threshold + compressedExcess);
+                      } else {
+                          compressedAudio[i] = sample;
+                      }
+                  }
+                  
+                                     // Normalize audio
+                   const maxAudio = Math.max(...compressedAudio.map(Math.abs));
+                   let finalAudio;
+                   if (maxAudio > 0) {
+                       finalAudio = compressedAudio.map(sample => (sample / maxAudio) * 0.9);
+                   } else {
+                       finalAudio = compressedAudio;
+                   }
+                   
+                                      // Store octave data for visualization
+                   finalAudio.originalOctaves = originalOctaves;
+                   finalAudio.octaveChanges = octaveChanges;
+                   
+                   console.log('Demo - Original octaves:', originalOctaves.length);
+                   console.log('Demo - Target octaves:', octaveChanges.length);
+                   console.log('Demo - Sample original octaves:', originalOctaves.slice(0, 5));
+                   console.log('Demo - Sample target octaves:', octaveChanges.slice(0, 5));
+                   
+                   return finalAudio;
+              } catch (error) {
+                  console.error('Transformation error:', error);
+                  return null;
+              }
+          }
+
+        // Create audio blob
+        function createAudioBlob(audioData, sampleRate = 44100) {
+            try {
+                const buffer = new ArrayBuffer(44 + audioData.length * 2);
+                const view = new DataView(buffer);
+                
+                const writeString = (offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                writeString(0, 'RIFF');
+                view.setUint32(4, 36 + audioData.length * 2, true);
+                writeString(8, 'WAVE');
+                writeString(12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                writeString(36, 'data');
+                view.setUint32(40, audioData.length * 2, true);
+                
+                for (let i = 0; i < audioData.length; i++) {
+                    const sample = Math.max(-1, Math.min(1, audioData[i]));
+                    view.setInt16(44 + i * 2, sample * 0x7FFF, true);
+                }
+                
+                return new Blob([buffer], { type: 'audio/wav' });
+            } catch (error) {
+                console.error('Audio blob creation error:', error);
+                return null;
+            }
+        }
+
+        // Download audio
+        function downloadAudio(type) {
+            const audioData = type === 'original' ? originalAudioData : transformedAudioData;
+            if (!audioData) return;
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            const filename = `${type}_${timestamp}.wav`;
+            
+            const blob = createAudioBlob(audioData, sampleRate);
+            if (!blob) return;
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+                 // Start recording
+         async function startRecording() {
+             try {
+                 // Clear previous data
+                 originalAudioData = null;
+                 transformedAudioData = null;
+                 
+                 // Hide previous sections
+                 document.getElementById('audio-section').classList.add('hidden');
+                 document.getElementById('waveform-section').classList.add('hidden');
+                 document.getElementById('success-message').classList.add('hidden');
+                 
+                 // Clear audio elements
+                 document.getElementById('original-audio').src = '';
+                 document.getElementById('transformed-audio').src = '';
+                 
+                 // Clear chart containers
+                 document.getElementById('original-waveform-chart').innerHTML = '';
+                 document.getElementById('transformed-waveform-chart').innerHTML = '';
+                 
+                 const stream = await navigator.mediaDevices.getUserMedia({ 
+                     audio: {
+                         sampleRate: 44100,
+                         channelCount: 1,
+                         echoCancellation: true,
+                         noiseSuppression: true,
+                         autoGainControl: true
+                     } 
+                 });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    const audioContext = new AudioContext();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    
+                    const channelData = audioBuffer.getChannelData(0);
+                    const audioData = Array.from(channelData);
+                    
+                    // Store original audio data (preserve original amplitude)
+                    originalAudioData = audioData;
+                    sampleRate = audioBuffer.sampleRate;
+                    
+                                         // Apply transformation
+                     const waveformData = generateWaveformData();
+                     transformedAudioData = applyWaveformTransformation(audioData, waveformData);
+                    
+                    // Update UI
+                    updateAudioPlayers();
+                    showSuccessMessage();
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recordingDuration = 0;
+                
+                updateRecordingUI();
+                
+                durationInterval = setInterval(() => {
+                    recordingDuration += 0.1;
+                    updateRecordingUI();
+                }, 100);
+                
+            } catch (err) {
+                console.error('Recording error:', err);
+                alert('Microphone access denied. Please allow microphone permissions and try again.');
+            }
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                if (durationInterval) {
+                    clearInterval(durationInterval);
+                    durationInterval = null;
+                }
+                
+                updateRecordingUI();
+            }
+        }
+
+        // Update recording UI
+        function updateRecordingUI() {
+            const statusEl = document.getElementById('recording-status');
+            const btnEl = document.getElementById('record-btn');
+            
+            if (isRecording) {
+                const minutes = Math.floor(recordingDuration / 60);
+                const seconds = Math.floor(recordingDuration % 60);
+                const tenths = Math.floor((recordingDuration % 1) * 10);
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}.${tenths}`;
+                
+                statusEl.textContent = `Recording... ${timeStr}`;
+                statusEl.className = 'recording-status recording';
+                
+                btnEl.innerHTML = '<span>⏹️</span>Stop Recording';
+                btnEl.className = 'btn recording';
+            } else {
+                statusEl.textContent = 'Ready to record';
+                statusEl.className = 'recording-status';
+                
+                btnEl.innerHTML = '<span>🎙️</span>Start Recording';
+                btnEl.className = 'btn';
+            }
+        }
+
+        // Update audio players
+        function updateAudioPlayers() {
+            if (originalAudioData && transformedAudioData) {
+                // Create audio URLs
+                const originalBlob = createAudioBlob(originalAudioData, sampleRate);
+                const transformedBlob = createAudioBlob(transformedAudioData, sampleRate);
+                
+                if (originalBlob && transformedBlob) {
+                    const originalUrl = URL.createObjectURL(originalBlob);
+                    const transformedUrl = URL.createObjectURL(transformedBlob);
+                    
+                    // Update audio elements
+                    const originalAudio = document.getElementById('original-audio');
+                    const transformedAudio = document.getElementById('transformed-audio');
+                    
+                    originalAudio.src = originalUrl;
+                    transformedAudio.src = transformedUrl;
+                    
+                    // Update info
+                    const originalDuration = originalAudioData.length / sampleRate;
+                    const transformedDuration = transformedAudioData.length / sampleRate;
+                    
+                    document.getElementById('original-info').textContent = 
+                        `Duration: ${formatDuration(originalDuration)} | Sample Rate: ${sampleRate}Hz | Samples: ${originalAudioData.length.toLocaleString()}`;
+                    
+                    document.getElementById('transformed-info').textContent = 
+                        `Duration: ${formatDuration(transformedDuration)} | Sample Rate: ${sampleRate}Hz | Samples: ${transformedAudioData.length.toLocaleString()}`;
+                    
+                    // Show audio section
+                    document.getElementById('audio-section').classList.remove('hidden');
+                    
+                    // Create audio waveform visualizations
+                    createAudioWaveformCharts();
+                    
+                    // Show waveform section
+                    document.getElementById('waveform-section').classList.remove('hidden');
+                }
+            }
+        }
+
+                 // Create audio waveform charts
+         function createAudioWaveformCharts() {
+             // Create pitch analysis visualization
+             const originalOctaves = transformedAudioData.originalOctaves || [];
+             const transformedOctaves = transformedAudioData.octaveChanges || [];
+             
+             // Create time axis for 0.1 second intervals
+             const timeAxis = Array.from({ length: originalOctaves.length }, (_, i) => i * 0.1);
+             
+             // Original pitch analysis
+             const originalPlotData = [{
+                 x: timeAxis,
+                 y: originalOctaves,
+                 type: 'scatter',
+                 mode: 'lines+markers',
+                 line: {
+                     color: '#3b82f6',
+                     width: 2
+                 },
+                 marker: {
+                     size: 6,
+                     color: '#3b82f6'
+                 },
+                 name: 'Original Pitch'
+             }];
+
+                           const originalLayout = {
+                  title: {
+                      text: 'Original Audio Pitch Analysis (0.1s segments)',
+                      font: { size: 12, color: '#1e293b' },
+                      x: 0.5,
+                      xanchor: 'center'
+                  },
+                  height: 200,
+                  margin: { l: 40, r: 20, t: 30, b: 40 },
+                 plot_bgcolor: 'white',
+                 paper_bgcolor: 'white',
+                 showlegend: false,
+                 xaxis: {
+                     title: 'Time (s)',
+                     showgrid: true,
+                     gridcolor: '#f1f5f9',
+                     zeroline: true,
+                     zerolinecolor: '#e2e8f0',
+                     color: '#64748b'
+                 },
+                 yaxis: {
+                     title: 'Octave (A4 = 4)',
+                     showgrid: true,
+                     gridcolor: '#f1f5f9',
+                     zeroline: true,
+                     zerolinecolor: '#e2e8f0',
+                     color: '#64748b',
+                     range: [0, 8],
+                     tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                     ticktext: ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
+                 },
+                 hovermode: 'closest'
+             };
+
+             // Transformed pitch targets
+             const transformedPlotData = [{
+                 x: timeAxis,
+                 y: transformedOctaves,
+                 type: 'scatter',
+                 mode: 'lines+markers',
+                 line: {
+                     color: '#8b5cf6',
+                     width: 2
+                 },
+                 marker: {
+                     size: 6,
+                     color: '#8b5cf6'
+                 },
+                 name: 'Autotuned Target'
+             }];
+
+                           const transformedLayout = {
+                  title: {
+                      text: 'Autotuned Audio Pitch Target (0.1s segments)',
+                      font: { size: 12, color: '#1e293b' },
+                      x: 0.5,
+                      xanchor: 'center'
+                  },
+                  height: 200,
+                  margin: { l: 40, r: 20, t: 30, b: 40 },
+                 plot_bgcolor: 'white',
+                 paper_bgcolor: 'white',
+                 showlegend: false,
+                 xaxis: {
+                     title: 'Time (s)',
+                     showgrid: true,
+                     gridcolor: '#f1f5f9',
+                     zeroline: true,
+                     zerolinecolor: '#e2e8f0',
+                     color: '#64748b'
+                 },
+                 yaxis: {
+                     title: 'Octave (A4 = 4)',
+                     showgrid: true,
+                     gridcolor: '#f1f5f9',
+                     zeroline: true,
+                     zerolinecolor: '#e2e8f0',
+                     color: '#64748b',
+                     range: [0, 8],
+                     tickvals: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                     ticktext: ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
+                 },
+                 hovermode: 'closest'
+             };
+
+             const config = {
+                 displayModeBar: false,
+                 responsive: true
+             };
+
+             Plotly.newPlot('original-waveform-chart', originalPlotData, originalLayout, config);
+             Plotly.newPlot('transformed-waveform-chart', transformedPlotData, transformedLayout, config);
+         }
+
+        // Format duration
+        function formatDuration(duration) {
+            if (!duration) return '0:00';
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Show success message
+        function showSuccessMessage() {
+            const successEl = document.getElementById('success-message');
+            successEl.classList.remove('hidden');
+            setTimeout(() => {
+                successEl.classList.add('hidden');
+            }, 3000);
+        }
+
+        // SNAP Map Configuration
+        const storeTypeMapping = {
+            'Grocery Store': 'bass',
+            'Convenience Store': 'guitar',
+            'Supermarket': 'lead',
+            'Super Store': 'pad',
+            'Farmers and Markets': 'piano_synth',
+            'Specialty Store': 'kick_snare',
+            'Other': 'hihat_openhat'
+        };
+
+        const instrumentFiles = {
+            'bass': ['Music/Cymatics%20-%20Cedar%20-%2095%20BPM%20C%23%20Min%20Bass.wav'],
+            'guitar': ['Music/Cymatics%20-%20Cedar%20-%2095%20BPM%20C%23%20Min%20Guitar.wav'],
+            'lead': ['Music/Cymatics%20-%20Cedar%20-%2095%20BPM%20C%23%20Min%20Lead.wav'],
+            'pad': ['Music/Cymatics%20-%20Overtime%20-%2095%20BPM%20C%23%20Min%20Pad.wav'],
+            'piano_synth': [
+                'Music/Cymatics%20-%20Overtime%20-%2095%20BPM%20C%23%20Min%20Piano.wav',
+                'Music/Cymatics%20-%20Overtime%20-%2095%20BPM%20C%23%20Min%20Synth.wav'
+            ],
+            'kick_snare': [
+                'Music/Cymatics%20-%20Ablaze%20Drum%20Loop%20-%2095%20BPM%20Kick.wav',
+                'Music/Cymatics%20-%20Ablaze%20Drum%20Loop%20-%2095%20BPM%20Snare.wav'
+            ],
+            'hihat_openhat': [
+                'Music/Cymatics%20-%20Ablaze%20Drum%20Loop%20-%2095%20BPM%20Hihat.wav',
+                'Music/Cymatics%20-%20Ablaze%20Drum%20Loop%20-%2095%20BPM%20Open%20Hat.wav'
+            ]
+        };
+
+        const storeColors = {
+            'Grocery Store': '#3b82f6',
+            'Convenience Store': '#8b5cf6',
+            'Supermarket': '#06b6d4',
+            'Super Store': '#10b981',
+            'Farmers and Markets': '#f59e0b',
+            'Specialty Store': '#ef4444',
+            'Other': '#6b7280'
+        };
+
+        // Initialize SNAP Map
+        async function initSNAPMap() {
+            try {
+                // Initialize audio context (will be resumed on user interaction)
+                snapAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Load SNAP data
+                const snapData = await loadSNAPData();
+                
+                // Process data by zip code
+                processSNAPDataByZipCode(snapData);
+                
+                // Initialize map
+                initSNAPMapView();
+                
+                // Create legend
+                createSNAPLegend();
+                
+                // Set up event listeners
+                setupSNAPEventListeners();
+                
+                // Load audio files after user interaction
+                document.getElementById('play-all-snap-btn').addEventListener('click', async function() {
+                    if (!snapAudioBuffers || Object.keys(snapAudioBuffers).length === 0) {
+                        await loadSNAPAudioFiles();
+                    }
+                }, { once: true });
+                
+            } catch (error) {
+                console.error('SNAP Map initialization error:', error);
+                // Show user-friendly error message
+                const mapContainer = document.getElementById('snap-map');
+                if (mapContainer) {
+                    mapContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px;">
+                            <div>
+                                <h3 style="color: #dc2626; margin-bottom: 10px;">Unable to load map data</h3>
+                                <p style="color: #64748b; margin-bottom: 15px;">
+                                    This demo requires a local web server to load the CSV data file.
+                                </p>
+                                <p style="color: #64748b; font-size: 14px;">
+                                    To run this demo, please start a local server in this directory:<br>
+                                    <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        python -m http.server 8000
+                                    </code><br>
+                                    Then open <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 2px; font-size: 12px;">http://localhost:8000/demo.html</code>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Load SNAP data
+        async function loadSNAPData() {
+            try {
+                const response = await fetch('MapData/SNAP Retailer Location data KING county.csv');
+                const csvText = await response.text();
+                return parseSNAPCSV(csvText);
+            } catch (error) {
+                console.error('Error loading SNAP data:', error);
+                throw new Error('Failed to load SNAP data');
+            }
+        }
+
+        // Parse SNAP CSV data
+        function parseSNAPCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] || '';
+                    });
+                    data.push(row);
+                }
+            }
+            
+            return data;
+        }
+
+        // Process SNAP data by zip code
+        function processSNAPDataByZipCode(data) {
+            snapZipData = {};
+            
+            data.forEach(row => {
+                const zipCode = row['Zip Code'];
+                const storeType = row['Store Type'];
+                
+                if (zipCode && storeType) {
+                    if (!snapZipData[zipCode]) {
+                        snapZipData[zipCode] = {
+                            totalStores: 0,
+                            storeTypes: {},
+                            coordinates: {
+                                lat: parseFloat(row['Latitude']) || 0,
+                                lng: parseFloat(row['Longitude']) || 0
+                            }
+                        };
+                    }
+                    
+                    snapZipData[zipCode].totalStores++;
+                    snapZipData[zipCode].storeTypes[storeType] = (snapZipData[zipCode].storeTypes[storeType] || 0) + 1;
+                }
+            });
+            
+            console.log('Processed SNAP zip data:', snapZipData);
+        }
+
+        // Initialize SNAP map view
+        function initSNAPMapView() {
+            // King County center coordinates
+            const kingCountyCenter = [47.5480, -121.9836];
+            
+            snapMap = L.map('snap-map').setView(kingCountyCenter, 9);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(snapMap);
+            
+            // Add zip code markers
+            addSNAPZipCodeMarkers();
+        }
+
+        // Add SNAP zip code polygons to map
+        async function addSNAPZipCodeMarkers() {
+            // Load ZIP code boundaries for King County
+            try {
+                const zipBoundaries = await loadKingCountyZipBoundaries();
+                
+                // Create a set of all zip codes from both SNAP data and GeoJSON boundaries
+                const allZipCodes = new Set([
+                    ...Object.keys(snapZipData),
+                    ...Object.keys(zipBoundaries)
+                ]);
+                
+                allZipCodes.forEach(zipCode => {
+                    const boundary = zipBoundaries[zipCode];
+                    
+                    if (boundary) {
+                        // Get data for this zip code (or create default data if not in SNAP data)
+                        let data = snapZipData[zipCode];
+                        if (!data) {
+                            // Create default data for zip codes not in SNAP data
+                            data = {
+                                totalStores: 0,
+                                storeTypes: {},
+                                coordinates: { lat: 0, lng: 0 } // Will be calculated from boundary
+                            };
+                            // Add to snapZipData for consistency
+                            snapZipData[zipCode] = data;
+                        }
+                        
+                        // Create polygon for zip code boundary
+                        const color = getSNAPZipCodeColor(data.totalStores);
+                        const opacity = Math.max(0.3, Math.min(0.8, data.totalStores / 20));
+                        
+                        // Handle MultiPolygon format from GeoJSON
+                        let polygon;
+                        if (Array.isArray(boundary[0]) && Array.isArray(boundary[0][0])) {
+                            // MultiPolygon format: [[[lat1,lng1], [lat2,lng2], ...], [[lat1,lng1], ...]]
+                            polygon = L.polygon(boundary, {
+                                fillColor: color,
+                                color: '#ffffff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: opacity
+                            }).addTo(snapMap);
+                        } else {
+                            // Single polygon format: [[lat1,lng1], [lat2,lng2], ...]
+                            polygon = L.polygon(boundary, {
+                                fillColor: color,
+                                color: '#ffffff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: opacity
+                            }).addTo(snapMap);
+                        }
+                        
+                        // Add zip code label
+                        const center = polygon.getBounds().getCenter();
+                        const label = L.divIcon({
+                            className: 'zip-label',
+                            html: `<div style="background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #1e293b; border: 1px solid #e2e8f0;">${zipCode}</div>`,
+                            iconSize: [50, 20],
+                            iconAnchor: [25, 10]
+                        });
+                        
+                        L.marker(center, { icon: label }).addTo(snapMap);
+                        
+                        // Create popup content
+                        const popupContent = createSNAPPopupContent(zipCode, data);
+                        polygon.bindPopup(popupContent);
+                        
+                        // Add click handler
+                        polygon.on('click', () => {
+                            selectSNAPZipCode(zipCode, data);
+                        });
+                        
+                        // Add hover effects
+                        polygon.on('mouseover', function() {
+                            this.setStyle({ fillOpacity: 0.9, weight: 3 });
+                        });
+                        
+                        polygon.on('mouseout', function() {
+                            this.setStyle({ fillOpacity: opacity, weight: 2 });
+                        });
+                        
+                    } else if (snapZipData[zipCode]) {
+                        // Fallback to marker if no boundary data but we have SNAP data
+                        const data = snapZipData[zipCode];
+                        const coordinates = data.coordinates;
+                        if (coordinates.lat && coordinates.lng) {
+                            const radius = Math.max(8, Math.min(20, data.totalStores * 2));
+                            const color = getSNAPZipCodeColor(data.totalStores);
+                            
+                            const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
+                                radius: radius,
+                                fillColor: color,
+                                color: '#ffffff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.7
+                            }).addTo(snapMap);
+                            
+                            const popupContent = createSNAPPopupContent(zipCode, data);
+                            marker.bindPopup(popupContent);
+                            
+                            marker.on('click', () => {
+                                selectSNAPZipCode(zipCode, data);
+                            });
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading ZIP boundaries, falling back to markers:', error);
+                // Fallback to original marker implementation
+                addSNAPZipCodeMarkersFallback();
+            }
+        }
+        
+        // Fallback function for markers
+        function addSNAPZipCodeMarkersFallback() {
+            Object.keys(snapZipData).forEach(zipCode => {
+                const data = snapZipData[zipCode];
+                const coordinates = data.coordinates;
+                
+                if (coordinates.lat && coordinates.lng) {
+                    const radius = Math.max(8, Math.min(20, data.totalStores * 2));
+                    const color = getSNAPZipCodeColor(data.totalStores);
+                    
+                    const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
+                        radius: radius,
+                        fillColor: color,
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.7
+                    }).addTo(snapMap);
+                    
+                    const popupContent = createSNAPPopupContent(zipCode, data);
+                    marker.bindPopup(popupContent);
+                    
+                    marker.on('click', () => {
+                        selectSNAPZipCode(zipCode, data);
+                    });
+                }
+            });
+        }
+        
+        // Load King County ZIP boundaries from GeoJSON
+        async function loadKingCountyZipBoundaries() {
+            try {
+                const response = await fetch('MapData/Zipcodes_for_King_County_and_Surrounding_Area_(Shorelines)___zipcode_shore_area.geojson');
+                const geojson = await response.json();
+                
+                const zipBoundaries = {};
+                
+                geojson.features.forEach(feature => {
+                    const zipCode = feature.properties.ZIPCODE;
+                    const countyName = feature.properties.COUNTY_NAME;
+                    
+                    // Only include zip codes that are in King County
+                    if (zipCode && countyName === 'King County' && feature.geometry && feature.geometry.coordinates) {
+                        // Handle both Polygon and MultiPolygon geometries
+                        let coordinates = feature.geometry.coordinates;
+                        if (feature.geometry.type === 'Polygon') {
+                            coordinates = [coordinates]; // Convert to MultiPolygon format
+                        }
+                        
+                        // Convert GeoJSON [lng, lat] to Leaflet [lat, lng] format
+                        const convertedCoordinates = coordinates.map(polygon => 
+                            polygon.map(ring => 
+                                ring.map(coord => [coord[1], coord[0]]) // Swap lng/lat to lat/lng
+                            )
+                        );
+                        
+                        zipBoundaries[zipCode] = convertedCoordinates;
+                    }
+                });
+                
+                console.log(`Loaded ${Object.keys(zipBoundaries).length} King County ZIP code boundaries from GeoJSON`);
+                return zipBoundaries;
+            } catch (error) {
+                console.error('Error loading ZIP boundaries from GeoJSON:', error);
+                // Fallback to simplified boundaries if GeoJSON fails
+                console.log('Falling back to simplified boundaries...');
+                return {
+                    '98001': [[47.3, -122.2], [47.4, -122.1], [47.4, -122.2], [47.3, -122.2]],
+                    '98002': [[47.2, -122.2], [47.3, -122.1], [47.3, -122.2], [47.2, -122.2]],
+                    '98003': [[47.3, -122.3], [47.4, -122.2], [47.4, -122.3], [47.3, -122.3]],
+                    '98004': [[47.6, -122.2], [47.7, -122.1], [47.7, -122.2], [47.6, -122.2]],
+                    '98005': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98006': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98007': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98008': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98010': [[47.3, -122.0], [47.4, -121.9], [47.4, -122.0], [47.3, -122.0]],
+                    '98011': [[47.7, -122.2], [47.8, -122.1], [47.8, -122.2], [47.7, -122.2]],
+                    '98014': [[47.6, -121.9], [47.7, -121.8], [47.7, -121.9], [47.6, -121.9]],
+                    '98019': [[47.7, -121.9], [47.8, -121.8], [47.8, -121.9], [47.7, -121.9]],
+                    '98022': [[47.1, -121.9], [47.2, -121.8], [47.2, -121.9], [47.1, -121.9]],
+                    '98023': [[47.2, -122.3], [47.3, -122.2], [47.3, -122.3], [47.2, -122.3]],
+                    '98026': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98027': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98028': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98029': [[47.5, -122.0], [47.6, -121.9], [47.6, -122.0], [47.5, -122.0]],
+                    '98030': [[47.3, -122.2], [47.4, -122.1], [47.4, -122.2], [47.3, -122.2]],
+                    '98031': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98032': [[47.3, -122.2], [47.4, -122.1], [47.4, -122.2], [47.3, -122.2]],
+                    '98033': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98034': [[47.7, -122.1], [47.8, -122.0], [47.8, -122.1], [47.7, -122.1]],
+                    '98038': [[47.3, -122.0], [47.4, -121.9], [47.4, -122.0], [47.3, -122.0]],
+                    '98039': [[47.6, -122.2], [47.7, -122.1], [47.7, -122.2], [47.6, -122.2]],
+                    '98040': [[47.5, -122.2], [47.6, -122.1], [47.6, -122.2], [47.5, -122.2]],
+                    '98042': [[47.3, -122.1], [47.4, -122.0], [47.4, -122.1], [47.3, -122.1]],
+                    '98045': [[47.4, -121.9], [47.5, -121.8], [47.5, -121.9], [47.4, -121.9]],
+                    '98047': [[47.2, -122.1], [47.3, -122.0], [47.3, -122.1], [47.2, -122.1]],
+                    '98050': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98052': [[47.6, -122.1], [47.7, -122.0], [47.7, -122.1], [47.6, -122.1]],
+                    '98053': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98055': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98056': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98057': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98058': [[47.4, -122.1], [47.5, -122.0], [47.5, -122.1], [47.4, -122.1]],
+                    '98059': [[47.5, -122.1], [47.6, -122.0], [47.6, -122.1], [47.5, -122.1]],
+                    '98065': [[47.5, -121.9], [47.6, -121.8], [47.6, -121.9], [47.5, -121.9]],
+                    '98070': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98072': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98074': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98075': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98077': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98083': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98092': [[47.2, -122.1], [47.3, -122.0], [47.3, -122.1], [47.2, -122.1]],
+                    '98093': [[47.6, -122.0], [47.7, -121.9], [47.7, -122.0], [47.6, -122.0]],
+                    '98101': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98102': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98103': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98104': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98105': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98106': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98107': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98108': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98109': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98112': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98115': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98116': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98117': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98118': [[47.5, -122.2], [47.6, -122.1], [47.6, -122.2], [47.5, -122.2]],
+                    '98119': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98121': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98122': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]],
+                    '98125': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98126': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98133': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98134': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98136': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98144': [[47.5, -122.2], [47.6, -122.1], [47.6, -122.2], [47.5, -122.2]],
+                    '98146': [[47.4, -122.3], [47.5, -122.2], [47.5, -122.3], [47.4, -122.3]],
+                    '98148': [[47.4, -122.3], [47.5, -122.2], [47.5, -122.3], [47.4, -122.3]],
+                    '98155': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98158': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98166': [[47.4, -122.3], [47.5, -122.2], [47.5, -122.3], [47.4, -122.3]],
+                    '98168': [[47.5, -122.3], [47.6, -122.2], [47.6, -122.3], [47.5, -122.3]],
+                    '98177': [[47.7, -122.3], [47.8, -122.2], [47.8, -122.3], [47.7, -122.3]],
+                    '98178': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98188': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98198': [[47.4, -122.2], [47.5, -122.1], [47.5, -122.2], [47.4, -122.2]],
+                    '98199': [[47.6, -122.3], [47.7, -122.2], [47.7, -122.3], [47.6, -122.3]]
+                };
+            }
+        }
+
+        // Get color for SNAP zip code based on store count (white to purple)
+        function getSNAPZipCodeColor(storeCount) {
+            if (storeCount >= 20) return '#7c3aed'; // Dark purple
+            if (storeCount >= 15) return '#8b5cf6'; // Purple
+            if (storeCount >= 10) return '#a78bfa'; // Light purple
+            if (storeCount >= 5) return '#c4b5fd'; // Very light purple
+            return '#f3f4f6'; // White/gray
+        }
+
+        // Create SNAP popup content
+        function createSNAPPopupContent(zipCode, data) {
+            const storeTypeList = Object.entries(data.storeTypes)
+                .map(([type, count]) => `<div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px;"><span>${type}:</span><span>${count}</span></div>`)
+                .join('');
+            
+            return `
+                <div style="min-width: 200px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #1e293b;">Zip Code ${zipCode}</div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px;"><span>Total Stores:</span><span>${data.totalStores}</span></div>
+                        ${storeTypeList}
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="play-${zipCode}" style="flex: 1; padding: 8px 12px; border: none; border-radius: 6px; background-color: #3b82f6; color: white; font-size: 12px; font-weight: 500; cursor: pointer;" onclick="toggleSNAPZipCodeAudio('${zipCode}')">
+                            Play Audio
+                        </button>
+                        <button id="stop-${zipCode}" style="padding: 8px 12px; border: none; border-radius: 6px; background-color: #dc2626; color: white; font-size: 12px; font-weight: 500; cursor: pointer; display: none;" onclick="stopSNAPZipCodeAudio('${zipCode}')">
+                            Stop
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Select SNAP zip code
+        function selectSNAPZipCode(zipCode, data) {
+            selectedSnapZipCode = zipCode;
+            
+            // Update zip info panel
+            const zipInfo = document.getElementById('zip-info-snap');
+            const storeCounts = document.getElementById('store-counts-snap');
+            
+            let storeTypeList = '';
+            if (Object.keys(data.storeTypes).length > 0) {
+                storeTypeList = Object.entries(data.storeTypes)
+                    .map(([type, count]) => `<div>${type}: ${count}</div>`)
+                    .join('');
+            } else {
+                storeTypeList = '<div style="color: #94a3b8; font-style: italic;">No SNAP retailers in this area</div>';
+            }
+            
+            storeCounts.innerHTML = `
+                <div><strong>Zip Code:</strong> ${zipCode}</div>
+                <div><strong>Total Stores:</strong> ${data.totalStores}</div>
+                <div style="margin-top: 8px;"><strong>Store Types:</strong></div>
+                ${storeTypeList}
+            `;
+            
+            zipInfo.style.display = 'block';
+        }
+
+        // Load SNAP audio files
+        async function loadSNAPAudioFiles() {
+            const loadingPromises = [];
+            
+            Object.entries(instrumentFiles).forEach(([instrument, files]) => {
+                files.forEach(file => {
+                    const promise = loadSNAPAudioFile(file, instrument);
+                    loadingPromises.push(promise);
+                });
+            });
+            
+            try {
+                await Promise.all(loadingPromises);
+                console.log('All SNAP audio files loaded successfully');
+            } catch (error) {
+                console.error('Error loading SNAP audio files:', error);
+            }
+        }
+
+        // Load individual SNAP audio file
+        async function loadSNAPAudioFile(filePath, instrument) {
+            try {
+                const response = await fetch(filePath);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await snapAudioContext.decodeAudioData(arrayBuffer);
+                
+                if (!snapAudioBuffers[instrument]) {
+                    snapAudioBuffers[instrument] = [];
+                }
+                snapAudioBuffers[instrument].push(audioBuffer);
+                
+                console.log(`Loaded SNAP audio file: ${filePath}`);
+            } catch (error) {
+                console.error(`Error loading SNAP audio file ${filePath}:`, error);
+                throw error;
+            }
+        }
+
+        // Create SNAP legend
+        function createSNAPLegend() {
+            const legend = document.getElementById('snap-legend');
+            
+            // Store count color scale (white to purple)
+            const storeCountRanges = [
+                { min: 0, max: 4, color: '#f3f4f6', label: '0-4 stores' },
+                { min: 5, max: 9, color: '#c4b5fd', label: '5-9 stores' },
+                { min: 10, max: 14, color: '#a78bfa', label: '10-14 stores' },
+                { min: 15, max: 19, color: '#8b5cf6', label: '15-19 stores' },
+                { min: 20, max: 999, color: '#7c3aed', label: '20+ stores' }
+            ];
+            
+            storeCountRanges.forEach(range => {
+                const legendItem = document.createElement('div');
+                legendItem.style.display = 'flex';
+                legendItem.style.alignItems = 'center';
+                legendItem.style.gap = '8px';
+                legendItem.innerHTML = `
+                    <div style="width: 16px; height: 16px; border-radius: 3px; border: 1px solid #e2e8f0; background-color: ${range.color};"></div>
+                    <span>${range.label}</span>
+                `;
+                legend.appendChild(legendItem);
+            });
+        }
+
+        // Setup SNAP event listeners
+        function setupSNAPEventListeners() {
+            document.getElementById('play-all-snap-btn').addEventListener('click', playAllSNAPTracks);
+            document.getElementById('play-zip-snap-btn').addEventListener('click', () => {
+                if (selectedSnapZipCode) {
+                    toggleSNAPZipCodeAudio(selectedSnapZipCode);
+                }
+            });
+            document.getElementById('stop-all-snap-btn').addEventListener('click', stopAllSNAPAudio);
+        }
+
+        // Global variable to track if all tracks are playing
+        let allTracksPlaying = false;
+
+
+
+        // Play all SNAP tracks together
+        async function playAllSNAPTracks() {
+            try {
+                if (snapAudioContext.state === 'suspended') {
+                    await snapAudioContext.resume();
+                }
+                
+                // Stop any currently playing audio first
+                stopAllSNAPAudio();
+                
+                // Check if audio files are loaded
+                if (!snapAudioBuffers || Object.keys(snapAudioBuffers).length === 0) {
+                    await loadSNAPAudioFiles();
+                }
+                
+                // Play all instruments
+                Object.keys(snapAudioBuffers).forEach(instrument => {
+                    playSNAPInstrument(instrument, `all-${instrument}`);
+                });
+                
+                console.log('All SNAP tracks started playing');
+            } catch (error) {
+                console.error('Error playing SNAP tracks:', error);
+                alert('Unable to play audio. Please check that audio files is available.');
+            }
+        }
+
+
+
+        // Global variable to track currently playing zip code
+        let currentlyPlayingZipCode = null;
+        let zipCodeAudioSources = {};
+
+        // Toggle SNAP zip code audio (play/pause)
+        async function toggleSNAPZipCodeAudio(zipCode) {
+            try {
+                if (currentlyPlayingZipCode === zipCode) {
+                    // Stop if already playing this zip code
+                    stopSNAPZipCodeAudio(zipCode);
+                } else {
+                    // Stop any other playing zip code and start this one
+                    if (currentlyPlayingZipCode) {
+                        stopSNAPZipCodeAudio(currentlyPlayingZipCode);
+                    }
+                    await playSNAPZipCodeAudio(zipCode);
+                }
+            } catch (error) {
+                console.error('Error toggling zip code audio:', error);
+                alert('Unable to play audio. Please check that audio files are available.');
+            }
+        }
+
+        // Play SNAP zip code audio
+        async function playSNAPZipCodeAudio(zipCode) {
+            try {
+                if (!snapZipData[zipCode]) return;
+                
+                if (snapAudioContext.state === 'suspended') {
+                    await snapAudioContext.resume();
+                }
+                
+                // Check if audio files are loaded
+                if (!snapAudioBuffers || Object.keys(snapAudioBuffers).length === 0) {
+                    await loadSNAPAudioFiles();
+                }
+                
+                const data = snapZipData[zipCode];
+                const storeTypes = Object.keys(data.storeTypes);
+                
+                // Store audio sources for this zip code
+                zipCodeAudioSources[zipCode] = [];
+                
+                // Play instruments for each store type present
+                if (storeTypes.length > 0) {
+                    storeTypes.forEach(storeType => {
+                        const instrument = storeTypeMapping[storeType];
+                        if (instrument && snapAudioBuffers[instrument]) {
+                            const sources = playSNAPInstrument(instrument, `${zipCode}-${instrument}`);
+                            if (sources) {
+                                zipCodeAudioSources[zipCode].push(...sources);
+                            }
+                        }
+                    });
+                } else {
+                    // For zip codes with no stores, show a message or play silence
+                    console.log(`Zip code ${zipCode} has no SNAP retailers - no audio to play`);
+                }
+                
+                currentlyPlayingZipCode = zipCode;
+                
+                // Update popup buttons
+                updateZipCodeButtonStates(zipCode, 'playing');
+                
+            } catch (error) {
+                console.error('Error playing zip code audio:', error);
+                alert('Unable to play audio. Please check that audio files are available.');
+            }
+        }
+
+        // Stop SNAP zip code audio
+        function stopSNAPZipCodeAudio(zipCode) {
+            try {
+                console.log(`Stopping audio for zip code ${zipCode}`);
+                
+                // Stop all audio sources for this zip code
+                if (zipCodeAudioSources[zipCode]) {
+                    zipCodeAudioSources[zipCode].forEach((source, index) => {
+                        try {
+                            if (source && typeof source.stop === 'function') {
+                                source.stop();
+                                console.log(`Stopped source ${index} for zip code ${zipCode}`);
+                            }
+                        } catch (sourceError) {
+                            console.warn(`Error stopping individual source ${index} for zip code ${zipCode}:`, sourceError);
+                        }
+                    });
+                    delete zipCodeAudioSources[zipCode];
+                    console.log(`Cleared audio sources for zip code ${zipCode}`);
+                }
+                
+                if (currentlyPlayingZipCode === zipCode) {
+                    currentlyPlayingZipCode = null;
+                    console.log(`Reset currently playing zip code`);
+                }
+                
+                // Update popup buttons
+                updateZipCodeButtonStates(zipCode, 'stopped');
+                
+                console.log(`Successfully stopped audio for zip code ${zipCode}`);
+                
+            } catch (error) {
+                console.error('Error stopping zip code audio:', error);
+            }
+        }
+
+        // Update zip code button states
+        function updateZipCodeButtonStates(zipCode, state) {
+            const playBtn = document.getElementById(`play-${zipCode}`);
+            const stopBtn = document.getElementById(`stop-${zipCode}`);
+            
+            if (playBtn && stopBtn) {
+                if (state === 'playing') {
+                    playBtn.textContent = 'Pause';
+                    playBtn.style.backgroundColor = '#f59e0b';
+                    stopBtn.style.display = 'block';
+                } else {
+                    playBtn.textContent = 'Play Audio';
+                    playBtn.style.backgroundColor = '#3b82f6';
+                    stopBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Play SNAP instrument
+        function playSNAPInstrument(instrument, id) {
+            if (!snapAudioBuffers[instrument] || snapAudioBuffers[instrument].length === 0) {
+                console.warn(`No SNAP audio buffers for instrument: ${instrument}`);
+                return [];
+            }
+            
+            const sources = [];
+            
+            snapAudioBuffers[instrument].forEach((buffer, index) => {
+                const source = snapAudioContext.createBufferSource();
+                const gainNode = snapAudioContext.createGain();
+                
+                source.buffer = buffer;
+                source.connect(gainNode);
+                gainNode.connect(snapAudioContext.destination);
+                
+                // Set volume based on number of tracks
+                const volume = 1.0 / snapAudioBuffers[instrument].length;
+                gainNode.gain.setValueAtTime(volume, snapAudioContext.currentTime);
+                
+                source.start();
+                snapCurrentlyPlaying.add(`${id}-${index}`);
+                sources.push(source);
+                
+                source.onended = () => {
+                    snapCurrentlyPlaying.delete(`${id}-${index}`);
+                    updateSNAPPlayButtonStates();
+                };
+            });
+            
+            return sources;
+        }
+
+        // Stop all SNAP audio
+        function stopAllSNAPAudio() {
+            console.log('Stopping all SNAP audio...');
+            
+            try {
+                // Stop all zip code audio sources first
+                Object.keys(zipCodeAudioSources).forEach(zipCode => {
+                    console.log(`Stopping zip code ${zipCode} audio`);
+                    stopSNAPZipCodeAudio(zipCode);
+                });
+                
+                // Aggressively stop all audio by creating a new audio context
+                if (snapAudioContext) {
+                    // Close the current audio context completely
+                    snapAudioContext.close().then(() => {
+                        console.log('Audio context closed');
+                        // Create a new audio context for future use
+                        snapAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log('New audio context created');
+                    }).catch(error => {
+                        console.error('Error closing audio context:', error);
+                        // If closing fails, try suspending
+                        if (snapAudioContext.state !== 'suspended') {
+                            snapAudioContext.suspend();
+                        }
+                    });
+                }
+                
+                // Clear the tracking sets
+                snapCurrentlyPlaying.clear();
+                
+                // Reset all tracks playing state
+                allTracksPlaying = false;
+                
+                // Update popup buttons
+                const popupButtons = document.querySelectorAll('[onclick*="toggleSNAPZipCodeAudio"]');
+                popupButtons.forEach(btn => {
+                    btn.textContent = 'Play Audio';
+                    btn.style.backgroundColor = '#3b82f6';
+                });
+                
+                // Update sidebar buttons
+                const sidebarPlayBtn = document.getElementById('play-zip-snap-btn');
+                const sidebarStopBtn = document.getElementById('stop-zip-snap-btn');
+                if (sidebarPlayBtn) {
+                    sidebarPlayBtn.textContent = 'Play Zip Code Audio';
+                    sidebarPlayBtn.style.backgroundColor = '#3b82f6';
+                }
+                if (sidebarStopBtn) {
+                    sidebarStopBtn.style.display = 'none';
+                }
+                
+                currentlyPlayingZipCode = null;
+                
+                console.log('All SNAP audio stopped');
+                
+            } catch (error) {
+                console.error('Error in stopAllSNAPAudio, using emergency stop:', error);
+                // Fallback to emergency stop if normal stop fails
+                emergencyStopAllAudio();
+            }
+        }
+
+        // Stop all SNAP tracks specifically (for the toggle function)
+        function stopAllSNAPTracks() {
+            console.log('Stopping all SNAP tracks...');
+            
+            try {
+                // Stop all currently playing audio sources
+                snapCurrentlyPlaying.forEach(id => {
+                    console.log(`Stopping audio source: ${id}`);
+                });
+                
+                // Clear the tracking set
+                snapCurrentlyPlaying.clear();
+                
+                // Reset all tracks playing state
+                allTracksPlaying = false;
+                
+                console.log('All SNAP tracks stopped');
+                
+            } catch (error) {
+                console.error('Error stopping SNAP tracks:', error);
+                // Fallback to full stop if track-specific stop fails
+                stopAllSNAPAudio();
+            }
+        }
+
+        // Update SNAP play button states
+        function updateSNAPPlayButtonStates() {
+            if (snapCurrentlyPlaying.size === 0) {
+                // If no tracks are playing, reset the all tracks state
+                allTracksPlaying = false;
+            }
+        }
+
+        // Emergency stop all audio function
+        function emergencyStopAllAudio() {
+            console.log('EMERGENCY STOP: Stopping all audio...');
+            
+            // Stop all audio sources immediately
+            Object.keys(zipCodeAudioSources).forEach(zipCode => {
+                if (zipCodeAudioSources[zipCode]) {
+                    zipCodeAudioSources[zipCode].forEach(source => {
+                        try {
+                            if (source && typeof source.stop === 'function') {
+                                source.stop();
+                            }
+                        } catch (e) {
+                            // Ignore errors during emergency stop
+                        }
+                    });
+                }
+            });
+            
+            // Clear all tracking
+            zipCodeAudioSources = {};
+            snapCurrentlyPlaying.clear();
+            currentlyPlayingZipCode = null;
+            allTracksPlaying = false;
+            
+            // Aggressively stop audio context
+            if (snapAudioContext) {
+                try {
+                    snapAudioContext.close().then(() => {
+                        snapAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }).catch(() => {
+                        if (snapAudioContext.state !== 'suspended') {
+                            snapAudioContext.suspend();
+                        }
+                    });
+                } catch (e) {
+                    // Ignore errors during emergency stop
+                }
+            }
+            
+            // Update all UI elements
+            const playAllBtn = document.getElementById('play-all-snap-btn');
+            if (playAllBtn) {
+                playAllBtn.textContent = 'Play All Tracks Together';
+                playAllBtn.style.backgroundColor = '#3b82f6';
+                playAllBtn.classList.remove('recording');
+            }
+            
+            // Update all popup buttons
+            const allPlayButtons = document.querySelectorAll('[onclick*="toggleSNAPZipCodeAudio"]');
+            allPlayButtons.forEach(btn => {
+                btn.textContent = 'Play Audio';
+                btn.style.backgroundColor = '#3b82f6';
+            });
+            
+            // Update sidebar buttons
+            const sidebarPlayBtn = document.getElementById('play-zip-snap-btn');
+            const sidebarStopBtn = document.getElementById('stop-zip-snap-btn');
+            if (sidebarPlayBtn) {
+                sidebarPlayBtn.textContent = 'Play Zip Code Audio';
+                sidebarPlayBtn.style.backgroundColor = '#3b82f6';
+            }
+            if (sidebarStopBtn) {
+                sidebarStopBtn.style.display = 'none';
+            }
+            
+            console.log('EMERGENCY STOP: All audio stopped');
+        }
+
+        // Event listeners
+        document.getElementById('record-btn').addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        // Add keyboard shortcut for emergency stop (Escape key)
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                console.log('Escape key pressed - emergency stop');
+                emergencyStopAllAudio();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createWaveformChart();
+            initSNAPMap();
+        });
+    </script>
+</body>
+</html>
