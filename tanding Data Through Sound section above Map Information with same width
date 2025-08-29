@@ -1,0 +1,5 @@
+[33m5598812[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix Play All Tracks Together button and add explanatory verbiage under map
+[33m7f836eb[m Fix Play All Tracks Together button to work as toggle with proper state management
+[33m1f62f54[m Update documentation to use main branch instead of master
+[33m52d2f85[m Remove large GeoJSON file and add .gitignore
+[33m76f0e13[m Add filtered King County GeoJSON and update demo.html
